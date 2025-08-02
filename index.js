@@ -1,13 +1,43 @@
 import express from "express"
 import mongoose from "mongoose"
 import bodyParser from "body-parser"
+import userRouter from "./routers/userRouter.js"
+import jwt from "jsonwebtoken"
 
 const app = express()
 
 
 app.use(bodyParser.json())
 
-const connectionString = 'mongodb+srv://admin:1216@cluster0.jkk1ekx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
+app.use(
+    (req,res,next)=>{
+        const value = req.header("Authorization")
+        if(value != null){
+            const token = value.replace("Bearer ","")
+            jwt.verify(
+                token,
+                "cbc-6503",
+                (err,decoded)=>{
+                    if(decoded == null){
+                        res.status(403).json({
+                            message : "Unauthorized"
+                        })
+                    }else{
+                        req.user = decoded
+                        next()
+                    }                    
+                }
+            )
+        }else{
+            next()
+        }        
+    }
+)
+
+
+const connectionString = "mongodb+srv://admin:1216@cluster0.jkk1ekx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+
+
 
 mongoose.connect(connectionString).then(
     ()=>{
@@ -19,32 +49,12 @@ mongoose.connect(connectionString).then(
     }
 )
 
-app.get("/" , 
-    (req,res)=>{
-        console.log(req)
-        res.json(
-            {
-                message : "This is a get request"
-            }
-        )   
-        console.log("This is a get request")
-    }
-)
 
 
-app.post("/", 
 
-    (req ,res)=>{
 
-        console.log(req.body)
-        res.json(
-            {
-                message : "This is a post request"
-            }
-        )
-        console.log("This is a post request")
-    }
-)
+app.use("/users", userRouter)
+
 
 
 
