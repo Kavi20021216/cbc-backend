@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import axios from "axios";
 import nodemailer from "nodemailer"
 import OTP from "../models/otp.js";
-const pw = "cuxxdepwvcubbeqg"
+const pw = "ebrdahzaqhgwvicn"
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
