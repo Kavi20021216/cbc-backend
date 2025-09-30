@@ -2,7 +2,7 @@ import Contactus from "../models/contactUs.js";
 import replyMassage from "../models/replyMassage.js";
 import { isAdmin } from "./userController.js";
 import nodemailer from "nodemailer";
-const pw = "mtpecokbqdjuiktg"
+const pw = "wtrgbunprtfjqmqt"
 
 
 const transporter = nodemailer.createTransport({
@@ -64,7 +64,7 @@ export async function getAllMassage(req,res) {
 	const limit = parseInt(req.params.limit) || 10;
 
 	if (req.user == null) {
-		res.status(401).json({ message: "Please login to view orders" });
+		res.status(401).json({ message: "Please login to view massages" });
 		return;
 	}
 
@@ -92,55 +92,55 @@ export async function getAllMassage(req,res) {
   }
 }
 
-export async function sendReply(req,res){
-    const msgid= req.params.massageId;
+export async function sendReply(req, res) {
+    const msgid = req.params.massageId;
     const email = req.body.email;
-    const replyText = req.body.massage;
-    try{
-
+    const replyText = req.body.reMassage; 
+    try {
+        if (!req.user) {
+            return res.status(401).json({ message: "Please login to reply to messages" });
+        }
         if (!isAdmin(req)) {
-          return res.status(403).json({ message: "Access denied only" });
+            return res.status(403).json({ message: "Access denied only" });
         }
 
-        
-        const messageFind = await Contactus.findById(msgid);
+        const messageFind = await Contactus.findOne({ massageId: msgid });
         if (!messageFind) {
-          return res.status(404).json({ message: "Message not found" });
-        }else{
-          const newmassage = new replyMassage({ email: email, massage:replyText});
-          await newmassage.save();
+            return res.status(404).json({ message: "Message not found" });
+        }
 
-          const message = {
-            from : "kaveetharandili@gmail.com",
+        const newReply = new replyMassage({ email: email, reMassage: replyText });
+        await newReply.save();
+
+        const mailOptions = {
+            from: "kaveetharandili@gmail.com",
             to: email,
-            subject: "Hi",
-            text: `This is cbc cosmatic...${replyText}`,
-          }
-          transporter.sendMail(message, (error, info) => {
-            if (error) {
-                console.error("Error sending email:", error);
-                res.status(500).json({ message: "Failed to email" });
-            } else {
-                console.log("Email sent:", info.response);
-                res.json({ message: "email sent successfully" });
-            }
-        });
-      }
-    }catch{
+            subject: "Reply from CBC Cosmetics",
+            text: `This is CBC Cosmetics: ${replyText}`,
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        res.json({ message: "Email sent successfully" });
+
+    } catch (error) {
+        console.error("Error sending reply:", error);
         res.status(500).json({ message: "Failed to create reply" });
     }
-    
-}
+  }
+
 
  
 
 export async function updateStatus(req, res) {
   try {
-    if (!req.user?.isAdmin) {
-      return res.status(403).json({ message: "Access denied only" });
-    }
+       
+    if (req.user == null) {
+		res.status(401).json({ message: "Please login to reply massage" });
+		return;
+	  }
 
-    const msgId = req.params.messageId; // ensure route param is messageId
+    const msgId = req.params.messageId; 
     const status = req.body.status;
 
     if (!status) {
@@ -148,7 +148,7 @@ export async function updateStatus(req, res) {
     }
 
     // Update status using _id
-    const updatedStatus = await Contactus.findByIdAndUpdate(
+    const updatedStatus = await Contactus.findOneAndUpdate(
       msgId,
       { status: status },
       { new: true }
