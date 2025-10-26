@@ -44,7 +44,7 @@ const productSchema = new mongoose.Schema({
         required : true,
         default : "cosmatics"
     }
-}, { timestamps: true });
+});
 
 const Product = mongoose.model("products",productSchema)
 export default Product;

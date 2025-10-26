@@ -294,7 +294,6 @@ export function deleteUser(req, res) {
 
   const email = req.params.email;
 
-  // Only admin can delete others
   
 
   const userDelete = User.deleteOne({ email: email })
