@@ -25,6 +25,7 @@ export function createUser(req, res) {
 		firstName: req.body.firstName,
 		lastName: req.body.lastName,
 		email: req.body.email,
+        phone:req.body.phone,
 		password: passwordHash,
 	};
 
@@ -243,4 +244,65 @@ export async function resetPassword(req,res){
         console.log(err)
         res.status(500).json({ message: "Failed to reset password" });
     }
+}
+
+
+
+export async function getUsers(req, res) {
+    const page = parseInt(req.params.page) || 1;
+    const limit = parseInt(req.params.limit) || 10;
+  try {
+    const count = await User.countDocuments();
+    const totalPages = Math.ceil(count / limit);
+
+    const users = await User.find()
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .sort({ date: -1 });
+
+    res.json({ users, totalPages }); 
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ message: "Failed to fetch users" });
+  }
+}
+
+export async function updateUser(req, res) {
+  const email = req.params.email;
+  const data = req.body;
+
+  try {
+    const update = await User.findOneAndUpdate({ email }, data, { new: true });
+    if (!update) return res.status(404).json({ message: "User not found" });
+
+    res.json({ message: "User updated successfully" });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({ message: "Failed to update user" });
+  }
+}
+
+export function deleteUser(req, res) {
+  if (req.user == null) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  
+   if (!isAdmin(req)) {
+        res.status(403).json({ message: "Access denied. Admins only." });
+        return;
+    }
+
+  const email = req.params.email;
+
+  // Only admin can delete others
+  
+
+  const userDelete = User.deleteOne({ email: email })
+    .then((result) => {
+      if (!userDelete) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json({ message: "User deleted" });
+    })
+    .catch(() => res.status(500).json({ message: "Failed to delete user" }));
 }
