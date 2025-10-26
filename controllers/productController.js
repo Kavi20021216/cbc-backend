@@ -21,19 +21,27 @@ export async function createProduct(req, res) {
 	}
 }
 
+
 export async function getProducts(req, res) {
-	try {
-		if (isAdmin(req)) {
-			const products = await Product.find();
-			return res.json(products);
-		} else {
-			const products = await Product.find({ isAvailable: true });
-			return res.json(products);
-		}
-	} catch (error) {
-		console.error("Error fetching products:", error);
-		return res.status(500).json({ message: "Failed to fetch products" });
-	}
+  const page = parseInt(req.params.page) || 1;
+  const limit = parseInt(req.params.limit) || 10;
+
+ 
+  const filter = req.user && isAdmin(req) ? {} : { isAvailable: true };
+
+  try {
+    const count = await Product.countDocuments(filter);
+    const totalPages = Math.max(1, Math.ceil(count / limit));
+
+    const products = await Product.find(filter)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .sort({ createdAt: -1 }); 
+    return res.json({ products, totalPages });
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    return res.status(500).json({ message: "Failed to fetch products" });
+  }
 }
 
 export async function deleteProduct(req, res) {
