@@ -44,6 +44,21 @@ export async function getProducts(req, res) {
   }
 }
 
+export async function getClientProducts(req, res) {
+	try {
+		if (isAdmin(req)) {
+			const products = await Product.find();
+			return res.json(products);
+		} else {
+			const products = await Product.find({ isAvailable: true });
+			return res.json(products);
+		}
+	} catch (error) {
+		console.error("Error fetching products:", error);
+		return res.status(500).json({ message: "Failed to fetch products" });
+	}
+}
+
 export async function deleteProduct(req, res) {
 	if (!isAdmin(req)) {
 		res.status(403).json({ message: "Access denied. Admins only." });
